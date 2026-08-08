@@ -3,9 +3,11 @@ Defines the dataclasses used by the package to model the domain
 """
 
 from dataclasses import dataclass
-from .exceptions import InvalidAirfoil, InvalidGeometry
+
 import numpy as np
 import numpy.typing as npt
+
+from .exceptions import InvalidAirfoil, InvalidGeometry
 
 
 @dataclass(frozen=True)
@@ -24,7 +26,9 @@ class AirfoilCoordinates:
         if self.x.size <= 3:
             raise InvalidAirfoil("An airfoil must have more than 3 points")
 
-        self.x.flags.writeable = False # Given that frozen does not cover the array element-wise
+        self.x.flags.writeable = (
+            False  # Given that frozen does not cover the array element-wise
+        )
         self.y.flags.writeable = False
 
 
@@ -41,8 +45,8 @@ class InertiaTensor:
     Iyy: float
     Izz: float
     Ixz: float
-    Ixy: float | None= None
-    Iyz: float | None= None
+    Ixy: float | None = None
+    Iyz: float | None = None
 
 
 @dataclass(frozen=True)
@@ -79,9 +83,11 @@ class SectionGeometry:
 
     def __post_init__(self) -> None:
         if self.chord_tip > self.chord_root:
-            raise InvalidGeometry("The chord_tip must be equal or less than the chord_root")
+            raise InvalidGeometry(
+                "The chord_tip must be equal or less than the chord_root"
+            )
 
-        if self.chord_tip <=0 or self.chord_root <=0:
+        if self.chord_tip <= 0 or self.chord_root <= 0:
             raise InvalidGeometry("The chord must be greater than zero")
 
         if self.span <= 0:
@@ -90,15 +96,15 @@ class SectionGeometry:
         if self.mass <= 0:
             raise InvalidGeometry("The mass must be greater than zero")
 
-    #Computes the taper ratio as chord_tip/chord_root
+    # Computes the taper ratio as chord_tip/chord_root
     @property
     def taper_ratio(self) -> float:
-        return self.chord_tip/self.chord_root
+        return self.chord_tip / self.chord_root
 
-    #Computes the empirical adjust factor (kappa)
+    # Computes the empirical adjust factor (kappa)
     @property
     def kappa(self) -> float:
-        return (-0.711 * self.taper_ratio + 0.979)
+        return -0.711 * self.taper_ratio + 0.979
 
 
 @dataclass(frozen=True)
