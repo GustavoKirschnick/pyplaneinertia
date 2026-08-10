@@ -17,7 +17,7 @@ class AirfoilCoordinates:
     Coordinates of an unit-chord 2D airfoil contour.
 
     The countor is stored into two 1D separate arrays (x and z).
-    
+
     Atributes:
         name: airfoil name (e.g. "S1223").
         x: chord-wise coordinates, in fraction of chord [0, 1].
@@ -26,12 +26,12 @@ class AirfoilCoordinates:
 
     name: str
     x: npt.NDArray[np.float64]
-    z: npt.NDArray[np.float64] # Given the y-axis is on the span-wide direction
+    z: npt.NDArray[np.float64]  # Given the y-axis is on the span-wide direction
 
     def __post_init__(self) -> None:
-        if type(self.x) != np.ndarray or type(self.z) != np.ndarray:
+        if type(self.x) is not np.ndarray or type(self.z) is not np.ndarray:
             raise InvalidAirfoil("X and Y must be a numpy array")
-        
+
         if self.x.ndim != 1 or self.z.ndim != 1:
             raise InvalidAirfoil("X and Y must be 1-D")
 
@@ -40,7 +40,7 @@ class AirfoilCoordinates:
 
         if self.x.size <= 3:
             raise InvalidAirfoil("An airfoil must have more than 3 points")
-        
+
         self.x.flags.writeable = (
             False  # Given that frozen does not cover the array element-wise
         )
@@ -56,18 +56,22 @@ class AirfoilCoordinates:
         Returns:
             The centroid coordinates (cx, cz) in fraction of the chord.
         """
-        x2, z2 = np.roll(self.x, -1), np.roll(self.z, -1),
+        x2, z2 = (
+            np.roll(self.x, -1),
+            np.roll(self.z, -1),
+        )
         cross = self.x * z2 - x2 * self.z
         signed_area = 0.5 * cross.sum()
         cx = ((self.x + x2) * cross).sum() / (6.0 * signed_area)
         cz = ((self.z + z2) * cross).sum() / (6.0 * signed_area)
 
         return cx, cz
-        
+
 
 @dataclass(frozen=True)
 class Centroid:
     """A point (x, y, z) in the local frame."""
+
     x: float
     y: float
     z: float
@@ -93,7 +97,7 @@ class InertiaTensor:
 class PositionVector:
     """
     Position and incidence value of a body in the global reference frame.
-    
+
     Atributes:
         x, y, z: position of the body origin (0, 0, 0).
         incidence: incidence angle, in radians.
@@ -108,6 +112,7 @@ class PositionVector:
 @dataclass(frozen=True)
 class RigidBody:
     """A rigid body, with inertia, centroid, position, and mass values."""
+
     inertia: InertiaTensor
     centroid: Centroid
     position: PositionVector
@@ -118,7 +123,7 @@ class RigidBody:
 class SpanPanel:
     """
     Single spanwise strip of a section.
-    
+
     Atributes:
         chord: local chord lenght of the panel.
         area: panel area (chord x panel width).
@@ -188,6 +193,7 @@ class SectionProperties:
         geometry: section's geometry descriptor.
         area_local: section's area.
     """
+
     inertia_local: InertiaTensor
     centroid_local: Centroid
     geometry: SectionGeometry
