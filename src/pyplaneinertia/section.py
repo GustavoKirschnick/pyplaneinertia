@@ -108,7 +108,7 @@ class Section:
 
         Args:
             panels: the section's panels, as returned by '_span_panels'.
-            center_of_mass: the section's center of mass, as returned by 
+            center_of_mass: the section's center of mass, as returned by
             'center_of_mass_local'.
         Return:
             The inertia at the center of mass in the local frame.
