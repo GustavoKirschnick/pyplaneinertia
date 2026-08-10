@@ -26,7 +26,7 @@ class Section:
 
         self.geometry = section_geometry
 
-    def _span_pannels(self, n_panel: int) -> List[SpanPanel]:
+    def _span_panels(self, n_panel: int) -> List[SpanPanel]:
         """
         Divides the SectionGeometry into n spanwise panels, following XFLR5 mass model
 
