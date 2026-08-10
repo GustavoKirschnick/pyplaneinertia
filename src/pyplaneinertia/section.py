@@ -31,8 +31,8 @@ class Section:
         Divides the SectionGeometry into n spanwise panels, following XFLR5 mass model
 
         Mass is distributed assuming uniform density across the wing volume: each
-        panel's mass is proportional to its local volume, which scales with the chord 
-        squared. The masses are normalized so their sum equals to self.geometry.mass. 
+        panel's mass is proportional to its local volume, which scales with the chord
+        squared. The masses are normalized so their sum equals to self.geometry.mass.
         Each panel is sampled at its spanwise midpoint.
 
         For each panel, the chord, area, mass, and centroid are computed.
