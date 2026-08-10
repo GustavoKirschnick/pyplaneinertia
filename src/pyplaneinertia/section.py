@@ -71,10 +71,10 @@ class Section:
 
     def center_of_mass_local(self, panels: List[SpanPanel]) -> Centroid:
         """
-        Computes the section's center of mass as a mass-weighted mean between the 
+        Computes the section's center of mass as a mass-weighted mean between the
         panels.
 
-        Each panel contributes with its centroid weighted by its mass, resulting in 
+        Each panel contributes with its centroid weighted by its mass, resulting in
         the section's center of mass.
 
         Args:
