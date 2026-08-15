@@ -11,7 +11,7 @@ Local frame convention:
 
 from typing import List
 
-from .models import Centroid, InertiaTensor, SectionGeometry, SpanPanel
+from .models import Centroid, InertiaTensor, SectionGeometry, SectionProperties, SpanPanel
 
 
 class Section:
@@ -146,3 +146,25 @@ class Section:
         return self.geometry.chord_root + (
             self.geometry.chord_tip - self.geometry.chord_root
         ) * (y / (self.geometry.span))
+
+    def properties(self, n_panel: int) ->SectionProperties:
+        """
+        Returns the inertia properties of a section as an object for downstream consumption
+
+        Args:
+            n_panel: number of panels to divide the section span into (e.g 100)
+        Returns:
+            The properties of a section at its CoM
+        """
+
+        panels: List[SpanPanel] = self._span_panels(n_panel) # Discritizes the geometry
+        centroid = self.center_of_mass_local(panels) # Compute the Section geometry
+        inertia = self.inertia_local(panels, centroid) # Compute the Section inertia
+        area = sum(panel.area for panel in panels) # Sum up the total panel area
+
+        return SectionProperties(
+            inertia_local=inertia,
+            centroid_local=centroid,
+            geometry=self.geometry,
+            area_local=area,
+            )
