@@ -26,13 +26,13 @@ def airfoils(
 @pytest.fixture(scope="session")
 def naca0012() -> AirfoilCoordinates:
     """Loads up NACA0012 coordinates from file."""
-    return load_airfoil_dat(FIXTURES_DIR / "naca0012.dat")
+    return load_airfoil_dat(FIXTURES_DIR / "NACA0012.dat")
 
 
 @pytest.fixture(scope="session")
 def selig1223() -> AirfoilCoordinates:
     """Loads up Selig1223 coordinates from file."""
-    return load_airfoil_dat(FIXTURES_DIR / "s1223.dat")
+    return load_airfoil_dat(FIXTURES_DIR / "S1223.dat")
 
 
 @pytest.fixture
