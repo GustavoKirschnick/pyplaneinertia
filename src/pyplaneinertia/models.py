@@ -49,25 +49,35 @@ class AirfoilCoordinates:
         )
         self.z.flags.writeable = False
 
-    def _polygon_moments(self) ->Tuple[float, float, float, float]:
+    def _polygon_moments(self) -> Tuple[float, float, float, float]:
         """
         Computes the area, centroid, and second moment of area from the airfoil polygon.
 
         Uses Gauss' shoelace formula over the closed contour. The polar moment of area
-        around its centroid is defined as: 
+        around its centroid is defined as:
         $\int[\left(x - x_{c}\right)^{2} + \left(z - z_{c}\right)^{2}] dA$.
         The area sign is kept so polar/signed_area is orientation-independent.
         """
 
         x, z = self.x, self.z
         x2, z2 = np.roll(x, -1), np.roll(z, -1)
-        cross = x * z2 - x2 * z # Consecutive vertices cross product (double the area size)
+        cross = (
+            x * z2 - x2 * z
+        )  # Consecutive vertices cross product (double the area size)
         signed_area = 0.5 * cross.sum()
-        cx = ((x + x2) * cross).sum() / (6*signed_area) # \frac{\sum \left(A_{i} cx_{i}\right)}{\sum A_{i}}
-        cz = ((z + z2) * cross).sum() / (6*signed_area) 
-        second_moment_x = (1/12) * ((x**2 + x * x2 + x2**2) * cross).sum() # Area moment
-        second_moment_z = (1/12) * ((z**2 + z * z2 + z2**2) * cross).sum() # Area moment
-        polar = (second_moment_x - signed_area * cx**2) + (second_moment_z - signed_area * cz**2) # Translating the moments from the origin to the centroid
+        cx = ((x + x2) * cross).sum() / (
+            6 * signed_area
+        )  # \frac{\sum \left(A_{i} cx_{i}\right)}{\sum A_{i}}
+        cz = ((z + z2) * cross).sum() / (6 * signed_area)
+        second_moment_x = (1 / 12) * (
+            (x**2 + x * x2 + x2**2) * cross
+        ).sum()  # Area moment
+        second_moment_z = (1 / 12) * (
+            (z**2 + z * z2 + z2**2) * cross
+        ).sum()  # Area moment
+        polar = (second_moment_x - signed_area * cx**2) + (
+            second_moment_z - signed_area * cz**2
+        )  # Translating the moments from the origin to the centroid
 
         return signed_area, cx, cz, polar
 
@@ -84,13 +94,15 @@ class AirfoilCoordinates:
     @property
     def chordwise_gyration2(self) -> float:
         """
-        Squared radius of gyration (polar moment / signed_area) of the airfoil about its centroid.
+        Squared radius of gyration (polar moment / signed_area) of the airfoil about
+        its centroid.
 
-        Used to model XFLR5's chordwise mass distribution (proportional to thickness). Multiply by
-        chord**2 for the dimensional value. 
+        Used to model XFLR5's chordwise mass distribution (proportional to thickness).
+        Multiply by chord**2 for the dimensional value.
         """
         signed_area, _, _, polar = self._polygon_moments()
         return polar / signed_area
+
 
 @dataclass(frozen=True)
 class Centroid:

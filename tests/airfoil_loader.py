@@ -3,19 +3,21 @@ Function used by the tests to import the airfoil .dat coordinates as an object
 """
 
 from pathlib import Path
-from pyplaneinertia.models import AirfoilCoordinates
-from pyplaneinertia.exceptions import InvalidAirfoil
 
 import numpy as np
 
+from pyplaneinertia.exceptions import InvalidAirfoil
+from pyplaneinertia.models import AirfoilCoordinates
+
 MIN_POINTS = 4
+
 
 def load_airfoil_dat(path: Path) -> AirfoilCoordinates:
     """
     Reads a .dat file of an airfoil and return it as an AirfoilCoordinates object.
 
-    The first line correspondant to the airfoil name is skipped. The remaining lines with
-    the x and z coordinates pairs are read. Blank lines ...
+    The first line correspondant to the airfoil name is skipped. The remaining lines
+    with the x and z coordinates pairs are read. Blank lines are skipped.
 
     Args:
         path: path to the .dat file
@@ -32,7 +34,7 @@ def load_airfoil_dat(path: Path) -> AirfoilCoordinates:
         line = line.strip()
 
         if not line:
-            continue # Skips empty lines
+            continue  # Skips empty lines
 
         parts = line.split()
         try:
@@ -42,7 +44,9 @@ def load_airfoil_dat(path: Path) -> AirfoilCoordinates:
         coords.append((x, z))
 
     if len(coords) < MIN_POINTS:
-        raise InvalidAirfoil(f"Only {len(coords)} coordinates parsed. File may be corrupted")
+        raise InvalidAirfoil(
+            f"Only {len(coords)} coordinates parsed. File may be corrupted"
+        )
     arr = np.array(coords, dtype=float)
 
     return AirfoilCoordinates(name=name, x=arr[:, 0], z=arr[:, 1])
