@@ -22,6 +22,9 @@ class AirfoilCoordinates:
         name: airfoil name (e.g. "S1223").
         x: chord-wise coordinates, in fraction of chord [0, 1].
         z: thickness-wise coordinates, in fraction of chord.
+    Methods:
+        airfoil_centroid: airfoil centroid, in chord fraction.
+        chordwise_gyration2: squared radius of gyration, chordwise, around the centroid.
     """
 
     name: str
@@ -30,13 +33,13 @@ class AirfoilCoordinates:
 
     def __post_init__(self) -> None:
         if type(self.x) is not np.ndarray or type(self.z) is not np.ndarray:
-            raise InvalidAirfoil("X and Y must be a numpy array")
+            raise InvalidAirfoil("X and Z must be a numpy array")
 
         if self.x.ndim != 1 or self.z.ndim != 1:
-            raise InvalidAirfoil("X and Y must be 1-D")
+            raise InvalidAirfoil("X and Z must be 1-D")
 
         if self.x.shape != self.z.shape:
-            raise InvalidAirfoil("X and Y must have the same shape")
+            raise InvalidAirfoil("X and Z must have the same shape")
 
         if self.x.size <= 3:
             raise InvalidAirfoil("An airfoil must have more than 3 points")
@@ -46,27 +49,48 @@ class AirfoilCoordinates:
         )
         self.z.flags.writeable = False
 
+    def _polygon_moments(self) ->Tuple[float, float, float, float]:
+        """
+        Computes the area, centroid, and second moment of area from the airfoil polygon.
+
+        Uses Gauss' shoelace formula over the closed contour. The polar moment of area
+        around its centroid is defined as: 
+        $\int[\left(x - x_{c}\right)^{2} + \left(z - z_{c}\right)^{2}] dA$.
+        The area sign is kept so polar/signed_area is orientation-independent.
+        """
+
+        x, z = self.x, self.z
+        x2, z2 = np.roll(x, -1), np.roll(z, -1)
+        cross = x * z2 - x2 * z # Consecutive vertices cross product (double the area size)
+        signed_area = 0.5 * cross.sum()
+        cx = ((x + x2) * cross).sum() / (6*signed_area) # \frac{\sum \left(A_{i} cx_{i}\right)}{\sum A_{i}}
+        cz = ((z + z2) * cross).sum() / (6*signed_area) 
+        second_moment_x = (1/12) * ((x**2 + x * x2 + x2**2) * cross).sum() # Area moment
+        second_moment_z = (1/12) * ((z**2 + z * z2 + z2**2) * cross).sum() # Area moment
+        polar = (second_moment_x - signed_area * cx**2) + (second_moment_z - signed_area * cz**2) # Translating the moments from the origin to the centroid
+
+        return signed_area, cx, cz, polar
+
     @property
     def airfoil_centroid(self) -> Tuple[float, float]:
         """
-        Returns the airfoil area centroid (cx, cz) via the Gauss' shoelace formula.
-
-        Computes the centroid of the closed unit-chord airfoil countor shape.
-
-        Returns:
-            The centroid coordinates (cx, cz) in fraction of the chord.
+        Airfoil area centroid (cx, cz), in chord fraction.
         """
-        x2, z2 = (
-            np.roll(self.x, -1),
-            np.roll(self.z, -1),
-        )
-        cross = self.x * z2 - x2 * self.z
-        signed_area = 0.5 * cross.sum()
-        cx = ((self.x + x2) * cross).sum() / (6.0 * signed_area)
-        cz = ((self.z + z2) * cross).sum() / (6.0 * signed_area)
+
+        _, cx, cz, _ = self._polygon_moments()
 
         return cx, cz
 
+    @property
+    def chordwise_gyration2(self) -> float:
+        """
+        Squared radius of gyration (polar moment / signed_area) of the airfoil about its centroid.
+
+        Used to model XFLR5's chordwise mass distribution (proportional to thickness). Multiply by
+        chord**2 for the dimensional value. 
+        """
+        signed_area, _, _, polar = self._polygon_moments()
+        return polar / signed_area
 
 @dataclass(frozen=True)
 class Centroid:
@@ -148,6 +172,8 @@ class SectionGeometry:
         chord_tip: chord at tip (0, chord_root].
         span: section span (> 0).
         mass: sectiom mass (> 0).
+    Methods:
+        taper_ratio: taper ratio as $\frac{c_{tip}}{c_{root}}$.
     """
 
     airfoil_coordinates: AirfoilCoordinates
