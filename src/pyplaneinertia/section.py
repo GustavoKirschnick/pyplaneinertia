@@ -11,7 +11,13 @@ Local frame convention:
 
 from typing import List
 
-from .models import Centroid, InertiaTensor, SectionGeometry, SectionProperties, SpanPanel
+from .models import (
+    Centroid,
+    InertiaTensor,
+    SectionGeometry,
+    SectionProperties,
+    SpanPanel,
+)
 
 
 class Section:
@@ -113,17 +119,21 @@ class Section:
         Return:
             The inertia at the center of mass in the local frame.
         """
-        
+
         Ixx = Iyy = Ixz = 0
         delta = self.geometry.span / len(panels)
-        gyration2 = self.geometry.airfoil_coordinates.chordwise_gyration2 # Chordwise distribution of the airfoil area, around the centroid
+        gyration2 = (
+            self.geometry.airfoil_coordinates.chordwise_gyration2
+        )  # Chordwise distribution of the airfoil area, around the centroid
 
         for panel in panels:
             dx = panel.centroid.x - center_of_mass.x
             dy = panel.centroid.y - center_of_mass.y
             dz = panel.centroid.z - center_of_mass.z
             Ixx += (1 / 12) * panel.mass * delta**2 + panel.mass * (dz**2 + dy**2)
-            Iyy += (panel.mass * gyration2 * panel.chord**2) + panel.mass * (dz**2 + dx**2)
+            Iyy += (panel.mass * gyration2 * panel.chord**2) + panel.mass * (
+                dz**2 + dx**2
+            )
             Ixz += -panel.mass * dx * dy  # minor fix needed
 
         return InertiaTensor(
@@ -138,32 +148,33 @@ class Section:
         Returns the local chord of a panel at a spanwise position.
 
         Args:
-            y: spanwise position measured from the section's root
+            y: spanwise position measured from the section's root.
         Returns:
-            The chord lenght at 'y'
+            The chord lenght at 'y'.
         """
         return self.geometry.chord_root + (
             self.geometry.chord_tip - self.geometry.chord_root
         ) * (y / (self.geometry.span))
 
-    def properties(self, n_panel: int) ->SectionProperties:
+    def properties(self, n_panel: int) -> SectionProperties:
         """
-        Returns the inertia properties of a section as an object for downstream consumption
+        Returns the inertia properties of a section as an object for downstream
+        consumption.
 
         Args:
-            n_panel: number of panels to divide the section span into (e.g 100)
+            n_panel: number of panels to divide the section span into (e.g 100).
         Returns:
-            The properties of a section at its CoM
+            The properties of a section at its CoM.
         """
 
-        panels: List[SpanPanel] = self._span_panels(n_panel) # Discritizes the geometry
-        centroid = self.center_of_mass_local(panels) # Compute the Section geometry
-        inertia = self.inertia_local(panels, centroid) # Compute the Section inertia
-        area = sum(panel.area for panel in panels) # Sum up the total panel area
+        panels: List[SpanPanel] = self._span_panels(n_panel)  # Discritizes the geometry
+        centroid = self.center_of_mass_local(panels)  # Compute the Section geometry
+        inertia = self.inertia_local(panels, centroid)  # Compute the Section inertia
+        area = sum(panel.area for panel in panels)  # Sum up the total panel area
 
         return SectionProperties(
             inertia_local=inertia,
             centroid_local=centroid,
             geometry=self.geometry,
             area_local=area,
-            )
+        )
