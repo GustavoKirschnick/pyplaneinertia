@@ -113,18 +113,17 @@ class Section:
         Return:
             The inertia at the center of mass in the local frame.
         """
-
+        
         Ixx = Iyy = Ixz = 0
         delta = self.geometry.span / len(panels)
+        gyration2 = self.geometry.airfoil_coordinates.chordwise_gyration2 # Chordwise distribution of the airfoil area, around the centroid
 
         for panel in panels:
             dx = panel.centroid.x - center_of_mass.x
             dy = panel.centroid.y - center_of_mass.y
             dz = panel.centroid.z - center_of_mass.z
             Ixx += (1 / 12) * panel.mass * delta**2 + panel.mass * (dz**2 + dy**2)
-            Iyy += (1 / 12) * panel.mass * (0.75 * panel.chord) ** 2 + panel.mass * (
-                dz**2 + dx**2
-            )
+            Iyy += (panel.mass * gyration2 * panel.chord**2) + panel.mass * (dz**2 + dx**2)
             Ixz += -panel.mass * dx * dy  # minor fix needed
 
         return InertiaTensor(
