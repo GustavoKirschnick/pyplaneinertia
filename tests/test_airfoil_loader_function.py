@@ -46,7 +46,7 @@ def test_rejects_defective_line(tmp_path):
 
 
 def test_rejects_empty_file(tmp_path):
-    path = tmp_path / "empy_file.dat"
+    path = tmp_path / "empty_file.dat"
     path.write_text("")
 
     with pytest.raises(InvalidAirfoil):
