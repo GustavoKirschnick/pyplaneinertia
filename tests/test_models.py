@@ -1,8 +1,8 @@
 """
 Tests dataclasses properties and exception handling.
 
-For the AirfoilCoordinates, the properties are tested against geometric shapes 
-(rectangle and a dislocated trapezoid) and a symetrical airfoil. SectionGeometry 
+For the AirfoilCoordinates, the properties are tested against geometric shapes
+(rectangle and a dislocated trapezoid) and a symetrical airfoil. SectionGeometry
 exception handling is tested, as well as the taper_ratio property.
 
 """
