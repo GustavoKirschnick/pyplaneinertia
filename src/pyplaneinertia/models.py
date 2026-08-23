@@ -1,5 +1,5 @@
 """
-Defines the dataclasses used by the package to model the domain
+Defines the dataclasses used by the package to model the domain.
 """
 
 from dataclasses import dataclass
@@ -118,15 +118,15 @@ class InertiaTensor:
     """
     Inertia tensor at a point.
 
-    Off-diagonal products default to None (not modeled), except Ixz.
+    Off-diagonal products default to zero.
     """
 
     Ixx: float
     Iyy: float
     Izz: float
-    Ixz: float
-    Ixy: float | None = None
-    Iyz: float | None = None
+    Ixz: float = 0.0
+    Ixy: float = 0.0
+    Iyz: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -236,3 +236,12 @@ class SectionProperties:
     centroid_local: Centroid
     geometry: SectionGeometry
     area_local: float
+
+@dataclass(frozen=True)
+class MassProperties:
+    """
+    Reunites the mass properties of a body, whether on the local or global coordinate frame.
+    """
+    mass: float
+    center_of_mass: Centroid
+    inertia: InertiaTensor
