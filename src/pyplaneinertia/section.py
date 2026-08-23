@@ -11,6 +11,7 @@ Local frame convention:
 
 from typing import List
 
+from .combine import combine
 from .models import (
     Centroid,
     InertiaTensor,
@@ -19,8 +20,6 @@ from .models import (
     SectionProperties,
     SpanPanel,
 )
-
-from .combine import combine
 
 
 class Section:
@@ -47,14 +46,18 @@ class Section:
         """
 
         panels: List[SpanPanel] = self._span_panels(n_panel)  # Discritizes the geometry
-        parts: List[MassProperties] = [self._panel_mass_properties(panel, n_panel) for panel in panels] # Consolidate each panel mass properties
-        combined = combine(parts) # Consolidates the properties on the Section CoM from all the panels
+        parts: List[MassProperties] = [
+            self._panel_mass_properties(panel, n_panel) for panel in panels
+        ]  # Consolidate each panel mass properties
+        combined = combine(
+            parts
+        )  # Consolidates the properties on the Section CoM from all the panels
 
         return SectionProperties(
             inertia_local=combined.inertia,
             centroid_local=combined.center_of_mass,
-            geometry= self.geometry,
-            area_local= sum(panel.area for panel in panels),
+            geometry=self.geometry,
+            area_local=sum(panel.area for panel in panels),
         )
 
     def _span_panels(self, n_panel: int) -> List[SpanPanel]:
@@ -100,9 +103,10 @@ class Section:
 
         return panels
 
-    def _panel_mass_properties(self, panel: SpanPanel, n_panel: int) ->MassProperties:
+    def _panel_mass_properties(self, panel: SpanPanel, n_panel: int) -> MassProperties:
         """
-        Agregates the panel mass properties: mass, center of mass, inertia at its OWN frame.
+        Agregates the panel mass properties: mass, center of mass, inertia at its OWN
+        frame.
 
         Args:
             panel: the input panel.
@@ -114,14 +118,14 @@ class Section:
         gyration2 = (
             self.geometry.airfoil_coordinates.chordwise_gyration2
         )  # Chordwise distribution of the airfoil area, around the centroid
-        Ixx = (1/12) * panel.mass * delta**2
+        Ixx = (1 / 12) * panel.mass * delta**2
         Iyy = panel.mass * gyration2 * panel.chord**2
         Izz = Ixx + Iyy
 
         return MassProperties(
             mass=panel.mass,
             center_of_mass=panel.centroid,
-            inertia=InertiaTensor(Ixx=Ixx, Iyy=Iyy, Izz=Izz)
+            inertia=InertiaTensor(Ixx=Ixx, Iyy=Iyy, Izz=Izz),
         )
 
     def _chord(self, y: float) -> float:
