@@ -1,7 +1,7 @@
 """
 Performs section-level modeling by dividing a lifting surface (SectionGeometry)
-into spanwise panels, computing its mass, center of mass, and inertia tensor in
-the local frame.
+into spanwise panels. The Section's mass, center of mass, and inertia tensor are
+evaluated on the local frame.
 
 Local frame convention:
     - x: chord-wise
@@ -14,10 +14,13 @@ from typing import List
 from .models import (
     Centroid,
     InertiaTensor,
+    MassProperties,
     SectionGeometry,
     SectionProperties,
     SpanPanel,
 )
+
+from .combine import combine
 
 
 class Section:
@@ -31,6 +34,28 @@ class Section:
     def __init__(self, section_geometry: SectionGeometry):
 
         self.geometry = section_geometry
+
+    def properties(self, n_panel: int) -> SectionProperties:
+        """
+        Returns the inertia properties of a section as an object for downstream
+        consumption.
+
+        Args:
+            n_panel: number of panels to divide the section span into (e.g 100).
+        Returns:
+            The properties of a section at its CoM.
+        """
+
+        panels: List[SpanPanel] = self._span_panels(n_panel)  # Discritizes the geometry
+        parts: List[MassProperties] = [self._panel_mass_properties(panel, n_panel) for panel in panels] # Consolidate each panel mass properties
+        combined = combine(parts) # Consolidates the properties on the Section CoM from all the panels
+
+        return SectionProperties(
+            inertia_local=combined.inertia,
+            centroid_local=combined.center_of_mass,
+            geometry= self.geometry,
+            area_local= sum(panel.area for panel in panels),
+        )
 
     def _span_panels(self, n_panel: int) -> List[SpanPanel]:
         """
@@ -75,72 +100,28 @@ class Section:
 
         return panels
 
-    def center_of_mass_local(self, panels: List[SpanPanel]) -> Centroid:
+    def _panel_mass_properties(self, panel: SpanPanel, n_panel: int) ->MassProperties:
         """
-        Computes the section's center of mass as a mass-weighted mean between the
-        panels.
-
-        Each panel contributes with its centroid weighted by its mass, resulting in
-        the section's center of mass.
+        Agregates the panel mass properties: mass, center of mass, inertia at its OWN frame.
 
         Args:
-            panels: the section's panels, as returned by '_span_panels'.
+            panel: the input panel.
+            n_panel: the total number of panels.
         Return:
-            The center of mass in the local frame.
+            The mass properties of a panel.
         """
-
-        x_ce = (
-            sum(panel.mass * panel.centroid.x for panel in panels) / self.geometry.mass
-        )
-        y_ce = (
-            sum(panel.mass * panel.centroid.y for panel in panels) / self.geometry.mass
-        )
-        z_ce = (
-            sum(panel.mass * panel.centroid.z for panel in panels) / self.geometry.mass
-        )
-
-        return Centroid(x=x_ce, y=y_ce, z=z_ce)
-
-    def inertia_local(
-        self, panels: List[SpanPanel], center_of_mass: Centroid
-    ) -> InertiaTensor:
-        """
-        Computes the section's inertia at its center of mass.
-
-        Each span panel contributes with its own inertia (modeled as a thin plate)
-        translated to the section's center of mass.
-
-        $I_{cm} = I_{self} + m * d^{2}$
-
-        Args:
-            panels: the section's panels, as returned by '_span_panels'.
-            center_of_mass: the section's center of mass, as returned by
-            'center_of_mass_local'.
-        Return:
-            The inertia at the center of mass in the local frame.
-        """
-
-        Ixx = Iyy = Ixz = 0
-        delta = self.geometry.span / len(panels)
+        delta = self.geometry.span / n_panel
         gyration2 = (
             self.geometry.airfoil_coordinates.chordwise_gyration2
         )  # Chordwise distribution of the airfoil area, around the centroid
+        Ixx = (1/12) * panel.mass * delta**2
+        Iyy = panel.mass * gyration2 * panel.chord**2
+        Izz = Ixx + Iyy
 
-        for panel in panels:
-            dx = panel.centroid.x - center_of_mass.x
-            dy = panel.centroid.y - center_of_mass.y
-            dz = panel.centroid.z - center_of_mass.z
-            Ixx += (1 / 12) * panel.mass * delta**2 + panel.mass * (dz**2 + dy**2)
-            Iyy += (panel.mass * gyration2 * panel.chord**2) + panel.mass * (
-                dz**2 + dx**2
-            )
-            Ixz += -panel.mass * dx * dy  # minor fix needed
-
-        return InertiaTensor(
-            Ixx=Ixx,
-            Iyy=Iyy,
-            Izz=Ixx + Iyy,
-            Ixz=Ixz,
+        return MassProperties(
+            mass=panel.mass,
+            center_of_mass=panel.centroid,
+            inertia=InertiaTensor(Ixx=Ixx, Iyy=Iyy, Izz=Izz)
         )
 
     def _chord(self, y: float) -> float:
@@ -155,26 +136,3 @@ class Section:
         return self.geometry.chord_root + (
             self.geometry.chord_tip - self.geometry.chord_root
         ) * (y / (self.geometry.span))
-
-    def properties(self, n_panel: int) -> SectionProperties:
-        """
-        Returns the inertia properties of a section as an object for downstream
-        consumption.
-
-        Args:
-            n_panel: number of panels to divide the section span into (e.g 100).
-        Returns:
-            The properties of a section at its CoM.
-        """
-
-        panels: List[SpanPanel] = self._span_panels(n_panel)  # Discritizes the geometry
-        centroid = self.center_of_mass_local(panels)  # Compute the Section geometry
-        inertia = self.inertia_local(panels, centroid)  # Compute the Section inertia
-        area = sum(panel.area for panel in panels)  # Sum up the total panel area
-
-        return SectionProperties(
-            inertia_local=inertia,
-            centroid_local=centroid,
-            geometry=self.geometry,
-            area_local=area,
-        )
