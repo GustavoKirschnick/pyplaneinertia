@@ -237,11 +237,14 @@ class SectionProperties:
     geometry: SectionGeometry
     area_local: float
 
+
 @dataclass(frozen=True)
 class MassProperties:
     """
-    Reunites the mass properties of a body, whether on the local or global coordinate frame.
+    Reunites the mass properties of a body, whether on the local or global coordinate
+    frame.
     """
+
     mass: float
     center_of_mass: Centroid
     inertia: InertiaTensor
