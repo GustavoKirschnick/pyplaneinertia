@@ -146,16 +146,6 @@ class PositionVector:
 
 
 @dataclass(frozen=True)
-class RigidBody:
-    """A rigid body, with inertia, centroid, position, and mass values."""
-
-    inertia: InertiaTensor
-    centroid: Centroid
-    position: PositionVector
-    mass: float
-
-
-@dataclass(frozen=True)
 class SpanPanel:
     """
     Single spanwise strip of a section.

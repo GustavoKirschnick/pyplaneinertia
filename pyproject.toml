@@ -1,7 +1,7 @@
 [project]
 name = "pyplaneinertia"
 version = "0.1.0"
-description = "Add your description here"
+description = "Inertia properties of an aircraft lifting-surfaces for analysis"
 readme = "README.md"
 authors = [
     { name = "GustavoKirschnick", email = "gustavoborges107@gmail.com" }
