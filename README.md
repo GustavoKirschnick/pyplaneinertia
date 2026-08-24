@@ -4,7 +4,7 @@ Inertia properties of aircraft lifting surfaces for stability and performance an
 
 [![CI](https://github.com/GustavoKirschnick/pyplaneinertia/actions/workflows/ci.yml/badge.svg)](https://github.com/GustavoKirschnick/pyplaneinertia/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/python-3.13)
+![Python 3.13](https://img.shields.io/badge/python-3.13-blue?logo=python&logoColor=white)
 [![Ruff](https://img.shields.io/badge/lint-ruff-orange.svg)](https://github.com/astral-sh/ruff)
 
 **Under active development**: The `Section` layer has been completed and validated against [XFLR5](https://www.flow5.tech/xflr5/xflr5.html). Higher layers are under development. Check [Status](#status).
